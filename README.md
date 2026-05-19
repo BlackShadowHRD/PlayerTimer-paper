@@ -27,4 +27,3 @@ This is an early learning project. Feedback is especially welcome on:
 - command handling
 - timer state design
 - countdown/countup logic
-- future support for buttons, areas, and minigames
