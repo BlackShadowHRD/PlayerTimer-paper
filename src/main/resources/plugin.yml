@@ -1,0 +1,11 @@
+name: PlayerTimer
+version: 0.1.0
+main: boti.doc.playertimer.PlayerTimerPlugin
+api-version: '1.21'
+author: docboti 
+description: Per-player timers for Paper minigames
+
+commands:
+  playertimer:
+    description: Controls a player's personal timer
+    usage: /playertimer <start|stop|reset>
