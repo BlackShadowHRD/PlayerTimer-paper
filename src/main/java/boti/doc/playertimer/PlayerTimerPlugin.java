@@ -21,12 +21,22 @@ public final class PlayerTimerPlugin extends JavaPlugin {
         COUNTUP,
         COUNTDOWN
     }
-    // hash map of players and the current value of their timer
-    private final Map<UUID, Integer> timers = new HashMap<>();
-    // hash map of players who have an active timer
-    private final Map<UUID, Boolean> running = new HashMap<>();
-    // hashmap of players and the type of timer they have running
-    private final Map<UUID, TimerMode> timerMode = new HashMap<>();
+    // Instead of the original three separate hashmaps we are creating the class PlayerTimer
+    // which will store the timer mode (countup or countdown), whether it is running and
+    // what it's current value in seconds is. We can then create a single hashmap which will
+    // have the UUID as the key and PlayerTimer with all the required timer information.
+    public class PlayerTimer {
+        public TimerMode mode;
+        public boolean running;
+        public int time;
+
+        public PlayerTimer(TimerMode mode, boolean running, int time) {
+            this.mode = mode;
+            this.running = running;
+            this.time = time;
+        }
+    }
+    private final Map<UUID, PlayerTimer> timers = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -40,26 +50,24 @@ public final class PlayerTimerPlugin extends JavaPlugin {
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 UUID id = player.getUniqueId();
+                PlayerTimer timer = timers.get(id);
 
-                if (!running.getOrDefault(id, false)) {
+                if (timer == null || !timer.running) {
                     continue;
                 }
 
-                int seconds;
-                if (timerMode.getOrDefault(id, TimerMode.COUNTUP) == TimerMode.COUNTDOWN) {
-                    seconds = timers.getOrDefault(id, 0) - 1;
-                    if (seconds <= 0) {
-                        seconds = 0;
-                        running.put(id, false);
+                if (timer.mode == TimerMode.COUNTDOWN) {
+                    timer.time -= 1;
+                    if (timer.time <= 0) {
+                        timer.time = 0;
+                        timer.running = false;
                         player.sendMessage("Your time is up.");
                     }
-                    timers.put(id, seconds);
                 }
                 else {
-                    seconds = timers.getOrDefault(id, 0) + 1;
-                    timers.put(id, seconds);
+                    timer.time += 1;
                 }
-                player.sendActionBar(Component.text("Time: " + formatTime(seconds)));
+                player.sendActionBar(Component.text("Time: " + formatTime(timer.time)));
             }
         }, 20L, 20L);
     }
@@ -103,46 +111,53 @@ public final class PlayerTimerPlugin extends JavaPlugin {
 
         switch (args[0].toLowerCase()) {
             case "start" -> {
-                timers.putIfAbsent(id, 0);
-                timerMode.putIfAbsent(id, TimerMode.COUNTUP);
+                timers.putIfAbsent(id, new PlayerTimer(TimerMode.COUNTUP, false, 0));
+                PlayerTimer timer = timers.get(id);
                 if (args.length >= 2) {
                     switch (args[1].toLowerCase()) {
                         case "countdown" -> {
-                            timerMode.put(id, TimerMode.COUNTDOWN);
-                            int countdownSeconds;
+                            timer.mode = TimerMode.COUNTDOWN;
                             if (args.length >= 3) {
                                 try {
-                                    countdownSeconds = Integer.parseInt(args[2]);
+                                    timer.time = Integer.parseInt(args[2]);
                                 } catch (NumberFormatException e) {
                                     player.sendMessage("Countdown length must be a number of seconds.");
                                     return true;
                                 }
 
                             } else {
-                                countdownSeconds = 300; // if the user does not specify the length of the countdown, it will default to 5 min
+                                timer.time = 300; // if the user does not specify the length of the countdown, it will default to 5 min
                             }
-                            timers.put(id, countdownSeconds);
                         }
                         case "countup" -> {
-                            timerMode.put(id, TimerMode.COUNTUP);
-                        }
+                            timer.mode = TimerMode.COUNTUP;
+                        } // If we are going to allow an upper limit for countup, the logic to deal with it needs to go here
                     }
                 }
-                running.put(id, true);
+                timer.running = true;
                 player.sendMessage("Your timer has started.");
             }
             case "stop" -> {
-                running.put(id, false);
+                PlayerTimer timer = timers.get(id);
+                if (timer == null) {
+                    player.sendMessage("You do not have a timer.");
+                    return true;
+                }
+                timer.running = false;
                 player.sendMessage("Your timer has stopped.");
             }
             case "reset" -> {
-                timers.put(id, 0);
-                running.put(id, false);
-                player.sendMessage("Your timer has reset.");
+                PlayerTimer timer = timers.get(id);
+                if (timer == null) {
+                    player.sendMessage("You do not have a timer.");
+                    return true;
+                }
+                timer.running = false;
+                timer.time = 0;
+                player.sendMessage("Your timer has been reset to 00:00.");
             }
             default -> player.sendMessage("Use /playertimer start, stop, or reset.");
         }
-
         return true;
     }
 }
