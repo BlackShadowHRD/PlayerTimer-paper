@@ -133,7 +133,14 @@ public final class PlayerTimerPlugin extends JavaPlugin {
                 UUID id = player.getUniqueId();
                 PlayerTimer timer = timers.get(id);
 
-                if (timer == null || timer.state != TimerState.RUNNING) {
+                if (timer == null) {
+                    continue;
+                }
+
+                if (timer.state != TimerState.RUNNING) {
+                    if (timer.visible) {
+                        player.sendActionBar(Component.text("Time: " + formatTime(timer.time)));
+                    }
                     continue;
                 }
 
