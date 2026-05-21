@@ -181,8 +181,8 @@ public final class PlayerTimerPlugin extends JavaPlugin {
     }
 
     private int startCountup(CommandSourceStack source) {
-        if (!(source.getSender() instanceof Player player)) {
-            source.getSender().sendMessage("Only players can use this command.");
+        if (!(source.getExecutor() instanceof Player player)) {
+            source.getExecutor().sendMessage("Only players can use this command.");
             return Command.SINGLE_SUCCESS;
         }
 
@@ -208,8 +208,8 @@ public final class PlayerTimerPlugin extends JavaPlugin {
     }
 
     private int startCountdown(CommandSourceStack source, int seconds) {
-        if (!(source.getSender() instanceof Player player)) {
-            source.getSender().sendMessage("Only players can use this command.");
+        if (!(source.getExecutor() instanceof Player player)) {
+            source.getExecutor().sendMessage("Only players can use this command.");
             return Command.SINGLE_SUCCESS;
         }
 
@@ -234,8 +234,8 @@ public final class PlayerTimerPlugin extends JavaPlugin {
     }
 
     private int pauseTimer(CommandSourceStack source) {
-        if (!(source.getSender() instanceof Player player)) {
-            source.getSender().sendMessage("Only players can use this command.");
+        if (!(source.getExecutor() instanceof Player player)) {
+            source.getExecutor().sendMessage("Only players can use this command.");
             return Command.SINGLE_SUCCESS;
         }
 
@@ -255,8 +255,8 @@ public final class PlayerTimerPlugin extends JavaPlugin {
     }
 
     private int resumeTimer(CommandSourceStack source) {
-        if (!(source.getSender() instanceof Player player)) {
-            source.getSender().sendMessage("Only players can use this command.");
+        if (!(source.getExecutor() instanceof Player player)) {
+            source.getExecutor().sendMessage("Only players can use this command.");
             return Command.SINGLE_SUCCESS;
         }
 
@@ -277,8 +277,8 @@ public final class PlayerTimerPlugin extends JavaPlugin {
     }
 
     private int stopTimer(CommandSourceStack source) {
-        if (!(source.getSender() instanceof Player player)) {
-            source.getSender().sendMessage("Only players can use this command.");
+        if (!(source.getExecutor() instanceof Player player)) {
+            source.getExecutor().sendMessage("Only players can use this command.");
             return Command.SINGLE_SUCCESS;
         }
 
@@ -300,8 +300,8 @@ public final class PlayerTimerPlugin extends JavaPlugin {
     }
 
     private int resetTimer(CommandSourceStack source) {
-        if (!(source.getSender() instanceof Player player)) {
-            source.getSender().sendMessage("Only players can use this command.");
+        if (!(source.getExecutor() instanceof Player player)) {
+            source.getExecutor().sendMessage("Only players can use this command.");
             return Command.SINGLE_SUCCESS;
         }
 
@@ -321,8 +321,8 @@ public final class PlayerTimerPlugin extends JavaPlugin {
     }
 
     private int hideTimer(CommandSourceStack source) {
-        if (!(source.getSender() instanceof Player player)) {
-            source.getSender().sendMessage("Only players can use this command.");
+        if (!(source.getExecutor() instanceof Player player)) {
+            source.getExecutor().sendMessage("Only players can use this command.");
             return Command.SINGLE_SUCCESS;
         }
 
@@ -342,8 +342,8 @@ public final class PlayerTimerPlugin extends JavaPlugin {
     }
 
     private int showTimer(CommandSourceStack source) {
-        if (!(source.getSender() instanceof Player player)) {
-            source.getSender().sendMessage("Only players can use this command.");
+        if (!(source.getExecutor() instanceof Player player)) {
+            source.getExecutor().sendMessage("Only players can use this command.");
             return Command.SINGLE_SUCCESS;
         }
 
