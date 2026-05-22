@@ -82,7 +82,7 @@ Examples:
 ```text
 05:30   ✓ valid
 59:59   ✓ valid
-60:00   ✓ valid (interpreted as 60 minutes)
+60:00   ✗ invalid 
 05:60   ✗ invalid
 99:99   ✗ invalid
 ```
