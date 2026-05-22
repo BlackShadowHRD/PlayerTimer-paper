@@ -255,6 +255,14 @@ build/libs/
 
 # Changelog
 
+## 0.3.0
+
+- Added Java 25 support
+- Changed to /playertimer startcountup and /playertimer startcountdown
+- Changed seconds parameter in countdown to duration
+- Added advance duration parsing with overflow protection
+- Updated README documentation
+
 ## 0.2.0
 
 - Migrated command handling to Brigadier
@@ -262,9 +270,7 @@ build/libs/
 - Added visibility system
 - Added pause/resume support
 - Added countdown completion sounds
-- Added advanced duration parsing
 - Added command block compatibility
-- Added Java 25 support
 - Refactored timer storage into `PlayerTimer` objects
 - Added countdown completion handling
 - Improved README documentation
