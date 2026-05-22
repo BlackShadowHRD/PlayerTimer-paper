@@ -1,5 +1,5 @@
 name: PlayerTimer
-version: 0.2.0
+version: 0.3.0
 main: boti.doc.playertimer.PlayerTimerPlugin
 api-version: '1.21'
 author: docboti 

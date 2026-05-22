@@ -1,8 +1,9 @@
 package boti.doc.playertimer;
 
 import com.mojang.brigadier.Command;
-
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -76,23 +77,28 @@ public final class PlayerTimerPlugin extends JavaPlugin {
 
                     commands.register(
                             Commands.literal("playertimer")
-                                    .then(Commands.literal("start")
+                                    .then(Commands.literal("startcountup")
                                             .executes(ctx -> startCountup(ctx.getSource()))
+                                    )
 
-                                            .then(Commands.literal("countup")
-                                                    .executes(ctx -> startCountup(ctx.getSource()))
+                                    .then(Commands.literal("startcountdown")
+                                            .executes(ctx -> startCountdown(ctx.getSource(), 300))
+
+                                            .then(Commands.argument("duration", StringArgumentType.greedyString())
+                                                    .executes(ctx -> {
+                                                        try {
+                                                            String duration = StringArgumentType.getString(ctx, "duration");
+                                                            int seconds = TimeParser.parseToSeconds(duration);
+                                                            return startCountdown(ctx.getSource(), seconds);
+                                                        } catch (IllegalArgumentException e) {
+                                                            ctx.getSource().getExecutor().sendMessage(
+                                                                    "Invalid duration. Use seconds, or format like: 1h0m10s or 01:00:10"
+                                                            );
+                                                            return Command.SINGLE_SUCCESS;
+                                                        }
+                                                    })
                                             )
 
-                                            .then(Commands.literal("countdown")
-                                                    .executes(ctx -> startCountdown(ctx.getSource(), 300))
-
-                                                    .then(Commands.argument("seconds", IntegerArgumentType.integer(1))
-                                                            .executes(ctx -> {
-                                                                int seconds = IntegerArgumentType.getInteger(ctx, "seconds");
-                                                                return startCountdown(ctx.getSource(), seconds);
-                                                            })
-                                                    )
-                                            )
                                     )
 
                                     .then(Commands.literal("pause")
@@ -175,8 +181,12 @@ public final class PlayerTimerPlugin extends JavaPlugin {
 
     // convert seconds value into mm:ss string for display
     private String formatTime(int totalSeconds) {
-        int minutes = totalSeconds / 60;
+        int hours = totalSeconds / 3600;
+        int minutes = (totalSeconds % 3600) / 60;
         int seconds = totalSeconds % 60;
+        if (hours > 0) {
+            return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        }
         return String.format("%02d:%02d", minutes, seconds);
     }
 
