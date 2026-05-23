@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'boti.doc'
-version = '0.3.0'
+version = '26.1.x-1.0'
 
 java {
     toolchain {

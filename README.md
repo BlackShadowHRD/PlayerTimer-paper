@@ -253,7 +253,37 @@ build/libs/
 
 ---
 
+# Versioning
+
+PlayerTimer uses the following versioning scheme:
+
+[target-minecraft-version]-[plugin-version]
+
+Example:
+
+26.1.x-1.0
+
+Meaning:
+- Compatible with Minecraft/Paper 1.21.6+ (API 26.1.x)
+- Plugin release version 1.0
+
+---
+
+---
+
 # Changelog
+
+## 26.1.x-1.0
+
+- Major internal refactor
+- Moved timer logic into `PlayerTimerService`
+- Added `PlayerTimer` model class
+- Added `PlayerTimerAPI` interface groundwork
+- Split `TimerMode` and `TimerState` into dedicated enum files
+- Simplified `PlayerTimerPlugin` to focus on plugin lifecycle and command registration
+- Improved separation of concerns and maintainability
+- Improved support for command block execution using `/execute as @p`
+- Added safer sender/executor handling
 
 ## 0.3.0
 
