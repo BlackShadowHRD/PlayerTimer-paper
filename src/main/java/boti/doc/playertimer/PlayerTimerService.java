@@ -4,7 +4,10 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -17,7 +20,7 @@ public class PlayerTimerService {
 
     private final Map<UUID, PlayerTimer> timers = new HashMap<>();
 
-    public int startCountup(CommandSourceStack source) {
+    public int startCountup(CommandSourceStack source, String colorName) {
         if (!(source.getExecutor() instanceof Player player)) {
             if (source.getSender() != null) {
                 source.getSender().sendMessage("Only players can use this command.");
@@ -40,13 +43,14 @@ public class PlayerTimerService {
             timer.setTime(0);
             timer.setState(TimerState.RUNNING);
             timer.setVisible(true);
+            timer.setColor(parseColor(colorName));
             player.sendMessage("Your timer has been started.");
         }
 
         return Command.SINGLE_SUCCESS;
     }
 
-    public int startCountdown(CommandSourceStack source, int seconds) {
+    public int startCountdown(CommandSourceStack source, int seconds, String colorName) {
         if (!(source.getExecutor() instanceof Player player)) {
             if (source.getSender() != null) {
                 source.getSender().sendMessage("Only players can use this command.");
@@ -68,6 +72,7 @@ public class PlayerTimerService {
             timer.setTime(seconds);
             timer.setState(TimerState.RUNNING);
             timer.setVisible(true);
+            timer.setColor(parseColor(colorName));
             player.sendMessage("Your timer has been started.");
         }
 
@@ -96,7 +101,6 @@ public class PlayerTimerService {
 
         return Command.SINGLE_SUCCESS;
     }
-
 
     public int resumeTimer(CommandSourceStack source) {
         if (!(source.getExecutor() instanceof Player player)) {
@@ -229,11 +233,11 @@ public class PlayerTimerService {
 
     public int executeStartCountdown(
             CommandContext<CommandSourceStack> ctx,
-            String duration
+            String duration, String colorName
     ) {
         try {
             int seconds = TimeParser.parseToSeconds(duration);
-            return startCountdown(ctx.getSource(), seconds);
+            return startCountdown(ctx.getSource(), seconds, colorName);
 
         } catch (IllegalArgumentException e) {
             if (ctx.getSource().getSender() != null) {
@@ -244,6 +248,16 @@ public class PlayerTimerService {
 
             return Command.SINGLE_SUCCESS;
         }
+    }
+
+    private NamedTextColor parseColor(String colorName) {
+        NamedTextColor color = NamedTextColor.NAMES.value(colorName.toLowerCase());
+
+        if (color == null) {
+            return NamedTextColor.WHITE;
+        }
+
+        return color;
     }
 
     public void tickAllPlayers() {
@@ -257,7 +271,7 @@ public class PlayerTimerService {
 
             if (timer.getState() != TimerState.RUNNING) {
                 if (timer.isVisible()) {
-                    player.sendActionBar(Component.text("Time: " + formatTime(timer.getTime())));
+                    player.sendActionBar(Component.text("Time: " + formatTime(timer.getTime()), timer.getColor()));
                 }
                 continue;
             }
@@ -280,7 +294,7 @@ public class PlayerTimerService {
                 timer.setTime(timer.getTime() + 1);
             }
             if (timer.isVisible()) {
-                player.sendActionBar(Component.text("Time: " + formatTime(timer.getTime())));
+                player.sendActionBar(Component.text("Time: " + formatTime(timer.getTime()), timer.getColor()));
             }
         }
     }

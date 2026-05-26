@@ -26,8 +26,10 @@ public final class PlayerTimerPlugin extends JavaPlugin {
         // playertimer
         // ├── start
         // │   ├── countup
+        // │       └── color
         // │   └── countdown
         // │       └── seconds
+        // │            └── color
         // ├── pause
         // ├── resume
         // ├── stop
@@ -40,17 +42,32 @@ public final class PlayerTimerPlugin extends JavaPlugin {
                     commands.register(
                             Commands.literal("playertimer")
                                     .then(Commands.literal("startcountup")
-                                            .executes(ctx -> timerService.startCountup(ctx.getSource()))
+                                            .executes(ctx -> timerService.startCountup(ctx.getSource(), "white"))
+
+                                            .then(Commands.argument("color", StringArgumentType.word())
+                                                    .executes(ctx -> {
+                                                        String colorName = StringArgumentType.getString(ctx, "color");
+                                                        return timerService.startCountup(ctx.getSource(), colorName);
+                                                    })
+                                            )
                                     )
 
                                     .then(Commands.literal("startcountdown")
-                                            .executes(ctx -> timerService.startCountdown(ctx.getSource(), 300))
+                                            .executes(ctx -> timerService.startCountdown(ctx.getSource(), 300, "white"))
 
-                                            .then(Commands.argument("duration", StringArgumentType.greedyString())
+                                            .then(Commands.argument("duration", StringArgumentType.word())
                                                     .executes(ctx -> {
                                                         String duration = StringArgumentType.getString(ctx, "duration");
-                                                        return timerService.executeStartCountdown(ctx, duration);
+                                                        return timerService.executeStartCountdown(ctx, duration, "white");
                                                     })
+
+                                                    .then(Commands.argument("color", StringArgumentType.word())
+                                                            .executes(ctx -> {
+                                                                String duration = StringArgumentType.getString(ctx, "duration");
+                                                                String colorName = StringArgumentType.getString(ctx, "color");
+                                                                return timerService.executeStartCountdown(ctx, duration, colorName);
+                                                            })
+                                                    )
                                             )
                                     )
 
