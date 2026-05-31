@@ -77,6 +77,16 @@ public class PlayerTimer {
         return false;
     }
 
+    public String toDisplayString() {
+        int hours = time / 3600;
+        int minutes = (time % 3600) / 60;
+        int seconds = time % 60;
+        if (hours > 0) {
+            return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        }
+        return String.format("%02d:%02d", minutes, seconds);
+    }
+
     // --- Accessors (no more raw setters for time/state/mode) ---
 
     public TimerMode getMode()        { return mode; }

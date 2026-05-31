@@ -217,20 +217,23 @@ public class PlayerTimerService {
     public void tickAllPlayers() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             PlayerTimer timer = timers.get(player.getUniqueId());
+            if (timer == null) continue;
 
-            boolean justFinished = timer.tick();  // invariants enforced inside class
-
-            if (justFinished) {
-                player.sendMessage("Your time is up.");
-                player.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 0.7f);
-            }
-
-            if (timer.isVisible()) {
-                player.sendActionBar(
-                        Component.text("Time: " + formatTime(timer.getTime()), timer.getColor())
-                );
-            }
+            boolean justFinished = timer.tick();
+            if (justFinished) notifyFinished(player);
+            if (timer.isVisible()) renderTimer(player, timer);
         }
+    }
+
+    private void notifyFinished(Player player) {
+        player.sendMessage("Your time is up.");
+        player.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 0.7f);
+    }
+
+    private void renderTimer(Player player, PlayerTimer timer) {
+        player.sendActionBar(
+                Component.text("Time: " + timer.toDisplayString(), timer.getColor())
+        );
     }
 
     private Player requirePlayer(CommandSourceStack source) {
