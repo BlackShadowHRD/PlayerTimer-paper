@@ -51,6 +51,7 @@ public class PlayerTimerCommand {
                                     .executes(ctx -> timerService.hideTimer(ctx.getSource())))
                             .then(Commands.literal("show")
                                     .executes(ctx -> timerService.showTimer(ctx.getSource())))
+                            .then(buildAdmin())
                             .build()
             );
         });
@@ -82,6 +83,21 @@ public class PlayerTimerCommand {
                                     String duration = StringArgumentType.getString(ctx, "duration");
                                     String color = StringArgumentType.getString(ctx, "color");
                                     return timerService.executeStartCountdown(ctx, duration, color);
+                                })
+                        )
+                );
+    }
+
+    private LiteralArgumentBuilder<CommandSourceStack> buildAdmin() {
+        return Commands.literal("admin")
+                .requires(src -> src.getSender().hasPermission("playertimer.admin"))
+                .then(Commands.literal("clearall")
+                        .executes(ctx -> timerService.clearAllTimers(ctx.getSource())))
+                .then(Commands.literal("clear")
+                        .then(Commands.argument("player", StringArgumentType.word())
+                                .executes(ctx -> {
+                                    String playerName = StringArgumentType.getString(ctx, "player");
+                                    return timerService.clearPlayerTimer(ctx.getSource(), playerName);
                                 })
                         )
                 );

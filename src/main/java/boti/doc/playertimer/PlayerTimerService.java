@@ -11,14 +11,24 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.util.UUID;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.UUID;
 
-public class PlayerTimerService {
+public class PlayerTimerService implements Listener {
 
-    private final Map<UUID, PlayerTimer> timers = new HashMap<>();
+    private final Map<UUID, PlayerTimer> timers;
+    private final TimerStore store;
+
+    public PlayerTimerService(TimerStore store) {
+        this.store = store;
+        this.timers = store.load();
+    }
+
+    // --- Player commands ---
 
     public int startCountup(CommandSourceStack source, String colorName) {
         Player player = requirePlayer(source);
@@ -27,19 +37,17 @@ public class PlayerTimerService {
         UUID id = player.getUniqueId();
         PlayerTimer timer = timers.get(id);
 
-        // If the player has a running timer do nothing but alert the player
         if (timer != null && timer.getState() == TimerState.RUNNING) {
             player.sendMessage("Your timer is already running.");
             return Command.SINGLE_SUCCESS;
         }
 
-        // No timer exists for the player => create timer with mode fixed at construction
         PlayerTimer newTimer = new PlayerTimer(TimerMode.COUNTUP, 0);
         newTimer.setColor(parseColor(colorName));
         newTimer.start();
         timers.put(id, newTimer);
-
         player.sendMessage("Your timer has been started.");
+
         return Command.SINGLE_SUCCESS;
     }
 
@@ -50,19 +58,17 @@ public class PlayerTimerService {
         UUID id = player.getUniqueId();
         PlayerTimer timer = timers.get(id);
 
-        // If the player has a running timer do nothing but alert the player
         if (timer != null && timer.getState() == TimerState.RUNNING) {
             player.sendMessage("Your timer is already running.");
             return Command.SINGLE_SUCCESS;
         }
 
-        // No timer exists for the player => create timer with mode fixed at construction
-        PlayerTimer newTimer = new PlayerTimer(TimerMode.COUNTUP, seconds);
+        PlayerTimer newTimer = new PlayerTimer(TimerMode.COUNTDOWN, seconds);
         newTimer.setColor(parseColor(colorName));
         newTimer.start();
         timers.put(id, newTimer);
-
         player.sendMessage("Your timer has been started.");
+
         return Command.SINGLE_SUCCESS;
     }
 
@@ -136,7 +142,7 @@ public class PlayerTimerService {
             return Command.SINGLE_SUCCESS;
         }
 
-        timer.reset(); // reset has no preconditions, so no try/catch needed
+        timer.reset();
         player.sendMessage("Your timer has been reset.");
 
         return Command.SINGLE_SUCCESS;
@@ -174,17 +180,6 @@ public class PlayerTimerService {
         return Command.SINGLE_SUCCESS;
     }
 
-    // convert seconds value into mm:ss string for display
-    public String formatTime(int totalSeconds) {
-        int hours = totalSeconds / 3600;
-        int minutes = (totalSeconds % 3600) / 60;
-        int seconds = totalSeconds % 60;
-        if (hours > 0) {
-            return String.format("%02d:%02d:%02d", hours, minutes, seconds);
-        }
-        return String.format("%02d:%02d", minutes, seconds);
-    }
-
     public int executeStartCountdown(
             CommandContext<CommandSourceStack> ctx,
             String duration, String colorName
@@ -192,27 +187,38 @@ public class PlayerTimerService {
         try {
             int seconds = TimeParser.parseToSeconds(duration);
             return startCountdown(ctx.getSource(), seconds, colorName);
-
         } catch (IllegalArgumentException e) {
             if (ctx.getSource().getSender() != null) {
                 ctx.getSource().getSender().sendMessage(
                         "Invalid duration. Use seconds, mm:ss, hh:mm:ss, or formats like 1h0m10s."
                 );
             }
-
             return Command.SINGLE_SUCCESS;
         }
     }
 
-    private NamedTextColor parseColor(String colorName) {
-        NamedTextColor color = NamedTextColor.NAMES.value(colorName.toLowerCase());
+    // --- Admin commands ---
 
-        if (color == null) {
-            return NamedTextColor.WHITE;
-        }
-
-        return color;
+    public int clearAllTimers(CommandSourceStack source) {
+        timers.clear();
+        saveAll();
+        source.getSender().sendMessage("All player timers have been cleared.");
+        return Command.SINGLE_SUCCESS;
     }
+
+    public int clearPlayerTimer(CommandSourceStack source, String playerName) {
+        Player target = Bukkit.getPlayerExact(playerName);
+        if (target == null) {
+            source.getSender().sendMessage("Player not found or not online.");
+            return Command.SINGLE_SUCCESS;
+        }
+        timers.remove(target.getUniqueId());
+        saveAll();
+        source.getSender().sendMessage("Timer cleared for " + target.getName() + ".");
+        return Command.SINGLE_SUCCESS;
+    }
+
+    // --- Tick loop ---
 
     public void tickAllPlayers() {
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -236,6 +242,22 @@ public class PlayerTimerService {
         );
     }
 
+    // --- Persistence ---
+
+    public void saveAll() {
+        store.save(timers);
+    }
+
+    // --- Events ---
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        saveAll();
+        timers.remove(event.getPlayer().getUniqueId());
+    }
+
+    // --- Helpers ---
+
     private Player requirePlayer(CommandSourceStack source) {
         if (source.getExecutor() instanceof Player player) {
             return player;
@@ -246,4 +268,8 @@ public class PlayerTimerService {
         return null;
     }
 
+    private NamedTextColor parseColor(String colorName) {
+        NamedTextColor color = NamedTextColor.NAMES.value(colorName.toLowerCase());
+        return color != null ? color : NamedTextColor.WHITE;
+    }
 }

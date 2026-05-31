@@ -19,14 +19,17 @@ public final class PlayerTimerPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         getLogger().info("PlayerTimer enabled");
-        timerService = new PlayerTimerService();
+        TimerStore store = new TimerStore(getDataFolder().toPath());
+        timerService = new PlayerTimerService(store);
         new PlayerTimerCommand(timerService).register(getLifecycleManager());
         Bukkit.getScheduler().runTaskTimer(this, timerService::tickAllPlayers, 20L, 20L);
+        Bukkit.getPluginManager().registerEvents(timerService, this);
     }
 
     @Override
     public void onDisable() {
         getLogger().info("PlayerTimer disabled");
+        timerService.saveAll();
     }
 
 }

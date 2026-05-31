@@ -87,6 +87,13 @@ public class PlayerTimer {
         return String.format("%02d:%02d", minutes, seconds);
     }
 
+    // This is to bypass the normal state preconditions during loading
+    void restore(TimerState state, boolean visible, NamedTextColor color) {
+        this.state = state;
+        this.visible = visible;
+        this.color = color;
+    }
+
     // --- Accessors (no more raw setters for time/state/mode) ---
 
     public TimerMode getMode()        { return mode; }
