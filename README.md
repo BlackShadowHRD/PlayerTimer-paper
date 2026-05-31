@@ -50,6 +50,8 @@ Designed for:
 | `/playertimer reset` | Reset timer to `00:00` |
 | `/playertimer hide` | Hide the timer display |
 | `/playertimer show` | Show the timer display |
+| `/playertimer admin clear <player>` | Clear the timer for player `<player>`|
+| `/playertimer admin clearall` | Clear the timer for all players |
 
 ---
 
@@ -306,46 +308,6 @@ Meaning:
 - Plugin release version 1.0
 
 ---
-
----
-
-# Changelog
-
-## 26.1.x-1.1
-- Added coloured timer support
-- Added optional colour arguments to timer start commands
-
-## 26.1.x-1.0
-
-- Major internal refactor
-- Moved timer logic into `PlayerTimerService`
-- Added `PlayerTimer` model class
-- Added `PlayerTimerAPI` interface groundwork
-- Split `TimerMode` and `TimerState` into dedicated enum files
-- Simplified `PlayerTimerPlugin` to focus on plugin lifecycle and command registration
-- Improved separation of concerns and maintainability
-- Improved support for command block execution using `/execute as @p`
-- Added safer sender/executor handling
-
-## 0.3.0
-
-- Added Java 25 support
-- Changed to /playertimer startcountup and /playertimer startcountdown
-- Changed seconds parameter in countdown to duration
-- Added advance duration parsing with overflow protection
-- Updated README documentation
-
-## 0.2.0
-
-- Migrated command handling to Brigadier
-- Added timer state system
-- Added visibility system
-- Added pause/resume support
-- Added countdown completion sounds
-- Added command block compatibility
-- Refactored timer storage into `PlayerTimer` objects
-- Added countdown completion handling
-- Improved README documentation
 
 ---
 
