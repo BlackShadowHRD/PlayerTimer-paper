@@ -4,72 +4,87 @@ import net.kyori.adventure.text.format.NamedTextColor;
 
 public class PlayerTimer {
 
-    private TimerMode mode;
+    private final TimerMode mode;
     private TimerState state;
     private boolean visible;
     private int time;
     private NamedTextColor color;
-    private boolean alarm;
 
-    public PlayerTimer(
-            TimerMode mode,
-            TimerState state,
-            boolean visible,
-            int time
-    ) {
+    public PlayerTimer(TimerMode mode, int startTime) {
         this.mode = mode;
-        this.state = state;
-        this.visible = visible;
-        this.time = time;
+        this.time = startTime;
+        this.state = TimerState.READY;
+        this.visible = true;
         this.color = NamedTextColor.WHITE;
-        this.alarm = false;
     }
 
-    public TimerMode getMode() {
-        return mode;
+    // --- Domain operations ---
+
+    public void start() {
+        if (state == TimerState.RUNNING) {
+            throw new IllegalStateException("Timer is already running");
+        }
+        state = TimerState.RUNNING;
     }
 
-    public void setMode(TimerMode mode) {
-        this.mode = mode;
+    public void pause() {
+        if (state != TimerState.RUNNING) {
+            throw new IllegalStateException("Cannot pause a timer that isn't running");
+        }
+        state = TimerState.PAUSED;
     }
 
-    public TimerState getState() {
-        return state;
+    public void resume() {
+        if (state != TimerState.PAUSED) {
+            throw new IllegalStateException("Cannot resume a timer that isn't paused");
+        }
+        state = TimerState.RUNNING;
     }
 
-    public void setState(TimerState state) {
-        this.state = state;
+    public void stop() {
+        if (state != TimerState.RUNNING && state != TimerState.PAUSED) {
+            throw new IllegalStateException("Timer is not active");
+        }
+        state = TimerState.STOPPED;
+        time = 0;
     }
 
-    public boolean isVisible() {
-        return visible;
+    public void reset() {
+        state = TimerState.READY;
+        time = 0;
     }
 
-    public void setVisible(boolean visible) {
-        this.visible = visible;
+    /**
+     * Advances the timer by one second up or down depending on mode.
+     * Enforces invariants 1–6. Returns true if the timer just finished (hit zero),
+     * so callers can react (play sound, send message) without inspecting state themselves.
+     */
+    public boolean tick() {
+        if (state != TimerState.RUNNING) {       // invariant 1
+            return false;
+        }
+
+        if (mode == TimerMode.COUNTDOWN) {       // invariants 3 & 4
+            time = Math.max(0, time - 1);        // invariant 5
+            if (time == 0) {                     // invariant 6
+                state = TimerState.FINISHED;
+                return true;                     // signal: timer just expired
+            }
+        } else {
+            time += 1;
+        }
+
+        return false;
     }
 
-    public int getTime() {
-        return time;
-    }
+    // --- Accessors (no more raw setters for time/state/mode) ---
 
-    public void setTime(int time) {
-        this.time = time;
-    }
+    public TimerMode getMode()        { return mode; }
+    public TimerState getState()      { return state; }
+    public int getTime()              { return time; }
+    public boolean isVisible()        { return visible; }
+    public NamedTextColor getColor()  { return color; }
 
-    public NamedTextColor getColor() {
-        return color;
-    }
-
-    public void setColor(NamedTextColor color) {
-        this.color = color;
-    }
-
-    public boolean hasAlarm() {
-        return alarm;
-    }
-
-    public void setAlarm(boolean alarm) {
-        this.alarm = alarm;
-    }
+    public void setVisible(boolean visible) { this.visible = visible; }
+    public void setColor(NamedTextColor color) { this.color = color; }
 }

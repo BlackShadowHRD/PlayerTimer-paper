@@ -21,81 +21,65 @@ public class PlayerTimerService {
     private final Map<UUID, PlayerTimer> timers = new HashMap<>();
 
     public int startCountup(CommandSourceStack source, String colorName) {
-        if (!(source.getExecutor() instanceof Player player)) {
-            if (source.getSender() != null) {
-                source.getSender().sendMessage("Only players can use this command.");
-            }
-            return Command.SINGLE_SUCCESS;
-        }
+        Player player = requirePlayer(source);
+        if (player == null) return Command.SINGLE_SUCCESS;
 
         UUID id = player.getUniqueId();
-
-        // If the player does not have a timer, create one and start it
-        timers.putIfAbsent(id, new PlayerTimer(TimerMode.COUNTUP, TimerState.READY, false, 0));
         PlayerTimer timer = timers.get(id);
 
         // If the player has a running timer do nothing but alert the player
-        // Otherwise set time to 0 and running to true
-        if (timer.getState() == TimerState.RUNNING) {
+        if (timer != null && timer.getState() == TimerState.RUNNING) {
             player.sendMessage("Your timer is already running.");
-        } else {
-            timer.setMode(TimerMode.COUNTUP);
-            timer.setTime(0);
-            timer.setState(TimerState.RUNNING);
-            timer.setVisible(true);
-            timer.setColor(parseColor(colorName));
-            player.sendMessage("Your timer has been started.");
+            return Command.SINGLE_SUCCESS;
         }
 
+        // No timer exists for the player => create timer with mode fixed at construction
+        PlayerTimer newTimer = new PlayerTimer(TimerMode.COUNTUP, 0);
+        newTimer.setColor(parseColor(colorName));
+        newTimer.start();
+        timers.put(id, newTimer);
+
+        player.sendMessage("Your timer has been started.");
         return Command.SINGLE_SUCCESS;
     }
 
     public int startCountdown(CommandSourceStack source, int seconds, String colorName) {
-        if (!(source.getExecutor() instanceof Player player)) {
-            if (source.getSender() != null) {
-                source.getSender().sendMessage("Only players can use this command.");
-            }
-            return Command.SINGLE_SUCCESS;
-        }
+        Player player = requirePlayer(source);
+        if (player == null) return Command.SINGLE_SUCCESS;
 
         UUID id = player.getUniqueId();
-
-        timers.putIfAbsent(id, new PlayerTimer(TimerMode.COUNTDOWN, TimerState.READY, true, seconds));
         PlayerTimer timer = timers.get(id);
 
         // If the player has a running timer do nothing but alert the player
-        // Otherwise set time to the countdown value and running to true
-        if (timer.getState() == TimerState.RUNNING) {
+        if (timer != null && timer.getState() == TimerState.RUNNING) {
             player.sendMessage("Your timer is already running.");
-        } else {
-            timer.setMode(TimerMode.COUNTDOWN);
-            timer.setTime(seconds);
-            timer.setState(TimerState.RUNNING);
-            timer.setVisible(true);
-            timer.setColor(parseColor(colorName));
-            player.sendMessage("Your timer has been started.");
+            return Command.SINGLE_SUCCESS;
         }
 
+        // No timer exists for the player => create timer with mode fixed at construction
+        PlayerTimer newTimer = new PlayerTimer(TimerMode.COUNTUP, seconds);
+        newTimer.setColor(parseColor(colorName));
+        newTimer.start();
+        timers.put(id, newTimer);
+
+        player.sendMessage("Your timer has been started.");
         return Command.SINGLE_SUCCESS;
     }
 
     public int pauseTimer(CommandSourceStack source) {
-        if (!(source.getExecutor() instanceof Player player)) {
-            if (source.getSender() != null) {
-                source.getSender().sendMessage("Only players can use this command.");
-            }
+        Player player = requirePlayer(source);
+        if (player == null) return Command.SINGLE_SUCCESS;
+
+        PlayerTimer timer = timers.get(player.getUniqueId());
+        if (timer == null) {
+            player.sendMessage("You do not have a timer.");
             return Command.SINGLE_SUCCESS;
         }
 
-        UUID id = player.getUniqueId();
-        PlayerTimer timer = timers.get(id);
-
-        if (timer == null) {
-            player.sendMessage("You do not have a timer.");
-        } else if (timer.getState() == TimerState.RUNNING){
-            timer.setState(TimerState.PAUSED);
+        try {
+            timer.pause();
             player.sendMessage("Your timer has been paused.");
-        } else {
+        } catch (IllegalStateException e) {
             player.sendMessage("Your timer is not running.");
         }
 
@@ -103,48 +87,39 @@ public class PlayerTimerService {
     }
 
     public int resumeTimer(CommandSourceStack source) {
-        if (!(source.getExecutor() instanceof Player player)) {
-            if (source.getSender() != null) {
-                source.getSender().sendMessage("Only players can use this command.");
-            }
+        Player player = requirePlayer(source);
+        if (player == null) return Command.SINGLE_SUCCESS;
+
+        PlayerTimer timer = timers.get(player.getUniqueId());
+        if (timer == null) {
+            player.sendMessage("You do not have a timer.");
             return Command.SINGLE_SUCCESS;
         }
 
-        UUID id = player.getUniqueId();
-        PlayerTimer timer = timers.get(id);
-
-        if (timer == null) {
-            player.sendMessage("You do not have a timer.");
-        } else if (timer.getState() != TimerState.PAUSED) {
-            player.sendMessage("You do not have a paused timer.");
-        } else {
-            timer.setState(TimerState.RUNNING);
-            timer.setVisible(true);
+        try {
+            timer.resume();
             player.sendMessage("Your timer has been resumed.");
+        } catch (IllegalStateException e) {
+            player.sendMessage("You do not have a paused timer.");
         }
 
         return Command.SINGLE_SUCCESS;
     }
 
     public int stopTimer(CommandSourceStack source) {
-        if (!(source.getExecutor() instanceof Player player)) {
-            if (source.getSender() != null) {
-                source.getSender().sendMessage("Only players can use this command.");
-            }
+        Player player = requirePlayer(source);
+        if (player == null) return Command.SINGLE_SUCCESS;
+
+        PlayerTimer timer = timers.get(player.getUniqueId());
+        if (timer == null) {
+            player.sendMessage("You do not have a timer.");
             return Command.SINGLE_SUCCESS;
         }
 
-        UUID id = player.getUniqueId();
-        PlayerTimer timer = timers.get(id);
-
-        if (timer == null) {
-            player.sendMessage("You do not have a timer.");
-        } else if (timer.getState() == TimerState.RUNNING || timer.getState() == TimerState.PAUSED) {
-            timer.setState(TimerState.STOPPED);
-            timer.setTime(0);
-            timer.setVisible(false);
+        try {
+            timer.stop();
             player.sendMessage("Your timer has been stopped.");
-        } else {
+        } catch (IllegalStateException e) {
             player.sendMessage("Your timer was not running.");
         }
 
@@ -152,45 +127,31 @@ public class PlayerTimerService {
     }
 
     public int resetTimer(CommandSourceStack source) {
-        if (!(source.getExecutor() instanceof Player player)) {
-            if (source.getSender() != null) {
-                source.getSender().sendMessage("Only players can use this command.");
-            }
+        Player player = requirePlayer(source);
+        if (player == null) return Command.SINGLE_SUCCESS;
+
+        PlayerTimer timer = timers.get(player.getUniqueId());
+        if (timer == null) {
+            player.sendMessage("You do not have a timer.");
             return Command.SINGLE_SUCCESS;
         }
 
-        UUID id = player.getUniqueId();
-        PlayerTimer timer = timers.get(id);
-
-        if (timer == null) {
-            player.sendMessage("You do not have a timer.");
-        } else {
-            timer.setState(TimerState.READY);
-            timer.setTime(0);
-            timer.setVisible(true);
-            player.sendMessage("Your timer has been reset.");
-        }
+        timer.reset(); // reset has no preconditions, so no try/catch needed
+        player.sendMessage("Your timer has been reset.");
 
         return Command.SINGLE_SUCCESS;
     }
 
     public int hideTimer(CommandSourceStack source) {
-        if (!(source.getExecutor() instanceof Player player)) {
-            if (source.getSender() != null) {
-                source.getSender().sendMessage("Only players can use this command.");
-            }
-            return Command.SINGLE_SUCCESS;
-        }
+        Player player = requirePlayer(source);
+        if (player == null) return Command.SINGLE_SUCCESS;
 
-        UUID id = player.getUniqueId();
-        PlayerTimer timer = timers.get(id);
-
+        PlayerTimer timer = timers.get(player.getUniqueId());
         if (timer == null) {
             player.sendMessage("You do not have a timer.");
             return Command.SINGLE_SUCCESS;
         }
 
-        // Hide timer whether or not it was visible before
         timer.setVisible(false);
         player.sendMessage("Your timer is now hidden.");
 
@@ -198,22 +159,15 @@ public class PlayerTimerService {
     }
 
     public int showTimer(CommandSourceStack source) {
-        if (!(source.getExecutor() instanceof Player player)) {
-            if (source.getSender() != null) {
-                source.getSender().sendMessage("Only players can use this command.");
-            }
-            return Command.SINGLE_SUCCESS;
-        }
+        Player player = requirePlayer(source);
+        if (player == null) return Command.SINGLE_SUCCESS;
 
-        UUID id = player.getUniqueId();
-        PlayerTimer timer = timers.get(id);
-
+        PlayerTimer timer = timers.get(player.getUniqueId());
         if (timer == null) {
             player.sendMessage("You do not have a timer.");
             return Command.SINGLE_SUCCESS;
         }
 
-        // Show timer whether or not it was visible before
         timer.setVisible(true);
         player.sendMessage("Your timer is now visible.");
 
@@ -262,41 +216,31 @@ public class PlayerTimerService {
 
     public void tickAllPlayers() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            UUID id = player.getUniqueId();
-            PlayerTimer timer = timers.get(id);
+            PlayerTimer timer = timers.get(player.getUniqueId());
 
-            if (timer == null) {
-                continue;
-            }
+            boolean justFinished = timer.tick();  // invariants enforced inside class
 
-            if (timer.getState() != TimerState.RUNNING) {
-                if (timer.isVisible()) {
-                    player.sendActionBar(Component.text("Time: " + formatTime(timer.getTime()), timer.getColor()));
-                }
-                continue;
+            if (justFinished) {
+                player.sendMessage("Your time is up.");
+                player.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 0.7f);
             }
 
-            if (timer.getMode() == TimerMode.COUNTDOWN) {
-                timer.setTime(timer.getTime() - 1);
-                if (timer.getTime() <= 0) {
-                    timer.setTime(0);
-                    timer.setState(TimerState.FINISHED);
-                    player.sendMessage("Your time is up.");
-                    player.playSound(
-                            player.getLocation(),
-                            Sound.BLOCK_BELL_USE,
-                            1.0f,
-                            0.7f
-                    );
-                }
-            }
-            else {
-                timer.setTime(timer.getTime() + 1);
-            }
             if (timer.isVisible()) {
-                player.sendActionBar(Component.text("Time: " + formatTime(timer.getTime()), timer.getColor()));
+                player.sendActionBar(
+                        Component.text("Time: " + formatTime(timer.getTime()), timer.getColor())
+                );
             }
         }
+    }
+
+    private Player requirePlayer(CommandSourceStack source) {
+        if (source.getExecutor() instanceof Player player) {
+            return player;
+        }
+        if (source.getSender() != null) {
+            source.getSender().sendMessage("Only players can use this command.");
+        }
+        return null;
     }
 
 }
