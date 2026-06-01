@@ -249,8 +249,16 @@ public class PlayerTimerService implements Listener {
     }
 
     private void notifyFinished(Player player) {
-        player.sendMessage("Your time is up.");
-        player.playSound(player.getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 0.7f);
+        // Use the player parameter directly
+        player.sendMessage(net.kyori.adventure.text.Component.text("Your time is up."));
+
+        player.playSound(
+                player.getLocation(),
+                "item.goat_horn.sound.0",
+                org.bukkit.SoundCategory.MASTER,
+                1.0f,
+                1.0f
+        );
     }
 
     private void renderTimer(Player player, PlayerTimer timer) {
@@ -270,7 +278,6 @@ public class PlayerTimerService implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         saveAll();
-        timers.remove(event.getPlayer().getUniqueId());
     }
 
     // --- Helpers ---
