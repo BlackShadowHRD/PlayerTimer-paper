@@ -19,11 +19,13 @@ public final class PlayerTimerPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         getLogger().info("PlayerTimer enabled");
-        TimerStore store = new TimerStore(getDataFolder().toPath());
+        TimerStore store = new TimerStore(getDataFolder().toPath(), getLogger());
         timerService = new PlayerTimerService(store);
         new PlayerTimerCommand(timerService).register(getLifecycleManager());
         Bukkit.getScheduler().runTaskTimer(this, timerService::tickAllPlayers, 20L, 20L);
         Bukkit.getPluginManager().registerEvents(timerService, this);
+        // timers will get auto-saved every 30 seconds
+        Bukkit.getScheduler().runTaskTimer(this, timerService::saveAll, 20L * 30, 20L * 30);
     }
 
     @Override

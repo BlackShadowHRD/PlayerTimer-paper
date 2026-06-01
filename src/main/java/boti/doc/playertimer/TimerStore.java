@@ -6,6 +6,8 @@ import com.google.gson.reflect.TypeToken;
 
 import net.kyori.adventure.text.format.NamedTextColor;
 
+import org.bukkit.Bukkit;
+
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
@@ -13,6 +15,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public class TimerStore {
 
@@ -20,9 +23,11 @@ public class TimerStore {
     private static final String FILE_NAME = "timers.json";
 
     private final Path dataFolder;
+    private final Logger logger;
 
-    public TimerStore(Path dataFolder) {
+    public TimerStore(Path dataFolder, Logger logger) {
         this.dataFolder = dataFolder;
+        this.logger = logger;
     }
 
     public void save(Map<UUID, PlayerTimer> timers) {
@@ -37,13 +42,16 @@ public class TimerStore {
             try (Writer writer = Files.newBufferedWriter(dataFolder.resolve(FILE_NAME))) {
                 GSON.toJson(serializable, writer);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException e) { // we regard the timer as critical so failure needs to result in a server shutdown
+            logger.severe("Failed to write timer data to " + dataFolder.resolve(FILE_NAME) +
+                    ". Check file permissions and disk health. " + e.getMessage());
+            Bukkit.shutdown();
         }
     }
 
     public Map<UUID, PlayerTimer> load() {
         Path file = dataFolder.resolve(FILE_NAME);
+
         if (!Files.exists(file)) return new HashMap<>();
 
         try (Reader reader = Files.newBufferedReader(file)) {
@@ -54,13 +62,20 @@ public class TimerStore {
 
             Map<UUID, PlayerTimer> timers = new HashMap<>();
             for (Map.Entry<String, TimerData> entry : raw.entrySet()) {
-                timers.put(UUID.fromString(entry.getKey()), entry.getValue().toTimer());
+                try {
+                    timers.put(UUID.fromString(entry.getKey()), entry.getValue().toTimer());
+                } catch (IllegalArgumentException e) {
+                    // Corrupt entry — skip it and keep loading the rest
+                    logger.warning("Skipping timer with invalid UUID: " + entry.getKey());
+                }
             }
             return timers;
 
         } catch (IOException e) {
-            e.printStackTrace();
-            return new HashMap<>();
+            throw new RuntimeException( // we are just disabling the plugin here
+                    "Failed to read timer data from " + file + ". " +
+                            "Check file permissions and disk health. Server cannot continue safely.", e
+            );
         }
     }
 
@@ -97,4 +112,5 @@ public class TimerStore {
             return timer;
         }
     }
+
 }
