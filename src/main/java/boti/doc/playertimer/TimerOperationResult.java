@@ -1,6 +1,6 @@
 package boti.doc.playertimer;
 
-public enum TimerResult {
+public enum TimerOperationResult {
     SUCCESS,
     NOT_RUNNING,
     NOT_PAUSED,

@@ -28,38 +28,38 @@ public class PlayerTimer {
     }
 
     // timer can only be paused if it is running
-    public TimerResult pause() {
+    public TimerOperationResult pause() {
         if (state != TimerState.RUNNING) {
-            return TimerResult.NOT_RUNNING;
+            return TimerOperationResult.NOT_RUNNING;
         }
         state = TimerState.PAUSED;
-        return TimerResult.SUCCESS;
+        return TimerOperationResult.SUCCESS;
     }
 
     // timer can only be resumed if it is paused
-    public TimerResult resume() {
+    public TimerOperationResult resume() {
         if (state != TimerState.PAUSED) {
-            return TimerResult.NOT_PAUSED;
+            return TimerOperationResult.NOT_PAUSED;
         }
         state = TimerState.RUNNING;
-        return TimerResult.SUCCESS;
+        return TimerOperationResult.SUCCESS;
     }
 
     // timer can only be stopped if running or paused
-    public TimerResult stop() {
+    public TimerOperationResult stop() {
         if (state != TimerState.RUNNING && state != TimerState.PAUSED) {
-            return TimerResult.NOT_ACTIVE;
+            return TimerOperationResult.NOT_ACTIVE;
         }
         state = TimerState.STOPPED;
         time = 0;
-        return TimerResult.SUCCESS;
+        return TimerOperationResult.SUCCESS;
     }
 
     // there are no preconditions for resetting the timer so it will always succeed
-    public TimerResult reset() {
+    public TimerOperationResult reset() {
         state = TimerState.READY;
         time = 0;
-        return TimerResult.SUCCESS;
+        return TimerOperationResult.SUCCESS;
     }
 
     /**
